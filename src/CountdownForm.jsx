@@ -1,15 +1,25 @@
 import { useState } from 'react'
-import { breakdown, nextOccurrence, nowLocalInput, pad } from './time.js'
+import {
+  breakdown,
+  nextOccurrence,
+  nowLocalInput,
+  pad,
+} from './time.js'
 import { Unit } from './CountdownCard.jsx'
 
 const REPEAT_OPTIONS = [
-  { value: 'none', label: '单次' },
-  { value: 'daily', label: '每天' },
-  { value: 'monthly', label: '每月' },
-  { value: 'yearly', label: '每年' },
+  { value: 'none', label: 'One-time' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
 ]
 
-export default function CountdownForm({ initial, now, onSubmit, onCancel }) {
+export default function CountdownForm({
+  initial,
+  now,
+  onSubmit,
+  onCancel,
+}) {
   const start = (initial?.target ?? nowLocalInput()).split('T')
   const [title, setTitle] = useState(initial?.title ?? '')
   const [note, setNote] = useState(initial?.note ?? '')
@@ -26,8 +36,10 @@ export default function CountdownForm({ initial, now, onSubmit, onCancel }) {
     e.preventDefault()
     setBusy(true)
     setError('')
+
     try {
       await onSubmit({ title, note, target, repeat })
+
       if (!initial) {
         const [d, t] = nowLocalInput().split('T')
         setTitle('')
@@ -43,46 +55,36 @@ export default function CountdownForm({ initial, now, onSubmit, onCancel }) {
     }
   }
 
-  const next = date && time ? nextOccurrence(target, repeat, now) : null
+  const next =
+    date && time ? nextOccurrence(target, repeat, now) : null
   const parts = next ? breakdown(next - now) : null
 
   return (
     <form className="panel" id="config" onSubmit={submit}>
-      <h3>{initial ? '编辑倒计时' : '新建倒计时'}</h3>
-      <p className="sub">设置倒计时目标和循环规则。</p>
+      <h3>{initial ? 'Edit Countdown' : 'Create Countdown'}</h3>
+      <p className="sub">
+        Set the countdown target and recurrence rules.
+      </p>
 
-      <div className="preview">
-        {showPreview && parts ? (
-          <div className="time">
-            <Unit value={pad(parts.days)} label="DAYS" />
-            <Unit value={pad(parts.hours)} label="HRS" />
-            <Unit value={pad(parts.minutes)} label="MINS" />
-            <Unit value={pad(parts.seconds)} label="SECS" />
-          </div>
-        ) : (
-          <div className="placeholder">
-            {showPreview ? '目标时间已过' : '点击下方“实时预览”'}
-          </div>
-        )}
-      </div>
+
 
       <label className="field">
-        <span>标题</span>
+        <span>Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例如：生日、交房租、考试"
+          placeholder="For example: Birthday, rent, or exam"
           maxLength={60}
           required
         />
       </label>
 
       <label className="field">
-        <span>内容备注</span>
+        <span>Notes</span>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="可选：想写点什么都行"
+          placeholder="Optional: Add any details you want"
           rows={3}
           maxLength={300}
         />
@@ -90,46 +92,70 @@ export default function CountdownForm({ initial, now, onSubmit, onCancel }) {
 
       <div className="row">
         <label className="field">
-          <span>目标日期</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          <span>Target Date</span>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
         </label>
+
         <label className="field">
-          <span>目标时间</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
+          <span>Target Time</span>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            required
+          />
         </label>
       </div>
 
-      <div className="field"><span>循环频率</span></div>
+      <div className="field">
+        <span>Repeat Frequency</span>
+      </div>
+
       <div className="seg">
-        {REPEAT_OPTIONS.map((o) => (
+        {REPEAT_OPTIONS.map((option) => (
           <button
             type="button"
-            key={o.value}
-            className={repeat === o.value ? 'on' : ''}
-            onClick={() => setRepeat(o.value)}
+            key={option.value}
+            className={repeat === option.value ? 'on' : ''}
+            onClick={() => setRepeat(option.value)}
           >
-            {o.label}
+            {option.label}
           </button>
         ))}
       </div>
 
       {error && <div className="error">{error}</div>}
 
-      <button type="submit" className="btn primary" disabled={busy}>
-        {initial ? '保存修改' : '创建倒计时'}
+      <button
+        type="submit"
+        className="btn primary"
+        disabled={busy}
+      >
+        {initial ? 'Save Changes' : 'Create Countdown'}
       </button>
-      <button type="button" className="btn outline" onClick={() => setShowPreview((v) => !v)}>
-        👁 实时预览
-      </button>
+
       {initial && (
-        <button type="button" className="btn outline" onClick={onCancel}>
-          取消编辑
+        <button
+          type="button"
+          className="btn outline"
+          onClick={onCancel}
+        >
+          Cancel Editing
         </button>
       )}
 
       <div className="tip">
         <span>✦</span>
-        <span>提示：每月循环遇到没有该日期的月份（如 31 号）时，会自动顺延到该月最后一天。</span>
+        <span>
+          Tip: If a monthly countdown falls on a date that does not
+          exist in a particular month, such as the 31st, it will
+          automatically move to the last day of that month.
+        </span>
       </div>
     </form>
   )

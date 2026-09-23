@@ -29,7 +29,7 @@ export default function App() {
       setItems(await listCountdowns())
       setError('')
     } catch (e) {
-      setError(`无法连接后端：${e.message}`)
+      setError(`Unable to connect to the backend: ${e.message}`)
     } finally {
       setLoading(false)
     }
@@ -50,7 +50,7 @@ export default function App() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('确定删除这个倒计时吗？')) return
+    if (!confirm('Are you sure you want to delete this countdown?')) return
     await deleteCountdown(id)
     if (editing?.id === id) setEditing(null)
     await load()
@@ -75,18 +75,7 @@ export default function App() {
         <div className="wrap">
           <div className="brand">
             <span className="logo">⟳</span>
-            LoopTick <span className="ver">v1.2</span>
-          </div>
-          <nav className="nav">
-            <a className="on" href="#">Dashboard</a>
-            <a href="#">Templates</a>
-            <a href="#">History</a>
-            <a href="#">Settings</a>
-          </nav>
-          <div className="user">
-            <button className="pro">Go Pro</button>
-            <span className="avatar">A</span>
-            alex.dev
+            LoopTick
           </div>
         </div>
       </header>
@@ -96,26 +85,26 @@ export default function App() {
           <div>
             <section className="hero">
               <div>
-                <h2>Smart repeating countdowns for productive teams.</h2>
-                <p>自定义倒计时，支持每日 / 每月 / 每年循环，到点自动重置，无需手动重来。</p>
+                <h2>Smart repeating countdowns</h2>
+                <p>Create custom countdowns with daily, monthly, or yearly recurrence. They reset automatically when the timer ends.</p>
               </div>
               <div className="stats">
-                <div><b>{stats.active}</b><small>进行中</small></div>
-                <div><b>{stats.loops}</b><small>循环倒计时</small></div>
-                <div><b>{stats.done}</b><small>已结束</small></div>
+                <div><b>{stats.active}</b><small>Active</small></div>
+                <div><b>{stats.loops}</b><small>Repeating</small></div>
+                <div><b>{stats.done}</b><small>Completed</small></div>
               </div>
             </section>
 
             <div className="section-head">
               <h3>Active Countdowns <span className="count">{items.length}</span></h3>
               <div className="filters">
-                <button className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')}>全部</button>
-                <button className={filter === 'loops' ? 'on' : ''} onClick={() => setFilter('loops')}>⟳ 仅循环</button>
+                <button className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')}>All</button>
+                <button className={filter === 'loops' ? 'on' : ''} onClick={() => setFilter('loops')}>⟳ Repeating Only</button>
               </div>
             </div>
 
             {error && <div className="error">{error}</div>}
-            {loading && <p className="empty">加载中…</p>}
+            {loading && <p className="empty">Loading…</p>}
 
             <div className="grid">
               {visible.map((item) => (
@@ -132,8 +121,8 @@ export default function App() {
               ))}
               <button className="new-card" onClick={() => { setEditing(null); focusForm() }}>
                 <span className="plus">+</span>
-                <b>新建倒计时</b>
-                <span>通过右侧配置面板快速创建自定义倒计时。</span>
+                <b>Create Countdown</b>
+                <span>Use the configuration panel on the right to quickly create a custom countdown.</span>
               </button>
             </div>
           </div>

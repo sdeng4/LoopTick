@@ -1,6 +1,6 @@
 import { breakdown, nextOccurrence, pad } from './time.js'
 
-export const REPEAT_LABEL = { none: '单次', daily: '每天', monthly: '每月', yearly: '每年' }
+export const REPEAT_LABEL = { none: 'One-time', daily: 'Daily', monthly: 'Monthly', yearly: 'Yearly' }
 
 export default function CountdownCard({ item, now, onEdit, onDelete }) {
   const next = nextOccurrence(item.target, item.repeat, now)
@@ -15,7 +15,7 @@ export default function CountdownCard({ item, now, onEdit, onDelete }) {
           {item.repeat !== 'none' && '⟳ '}
           {REPEAT_LABEL[item.repeat]}
         </span>
-        <span className="status">{finished ? '已结束' : '进行中'}</span>
+        <span className="status">{finished ? 'Completed' : 'Active'}</span>
       </div>
 
       <h4>{item.title}</h4>
@@ -35,8 +35,8 @@ export default function CountdownCard({ item, now, onEdit, onDelete }) {
       <div className="card-foot">
         <span>▦ {stamp}</span>
         <span className="buttons">
-          <button className="icon-btn" onClick={onEdit} title="编辑">✎</button>
-          <button className="icon-btn danger" onClick={onDelete} title="删除">✕</button>
+          <button className="icon-btn" onClick={onEdit} title="edit">✎</button>
+          <button className="icon-btn danger" onClick={onDelete} title="delete">✕</button>
         </span>
       </div>
     </article>
