@@ -1,5 +1,5 @@
 .shell { min-height: 100vh; display: flex; flex-direction: column; }
-.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.wrap { width: 90%; max-width: 1600px; margin: 0 auto; padding: 0 24px; }
 
 /* top bar */
 .topbar { background: #fff; border-bottom: 1px solid var(--border); }
@@ -102,10 +102,147 @@
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
-  .panel { position: static; order: -1; }
+  .panel { position: static; }
   .nav { display: none; }
 }
 @media (max-width: 600px) {
   .grid { grid-template-columns: 1fr; }
   .footer .wrap { flex-direction: column; justify-content: center; gap: 6px; }
+}
+
+
+/* Slightly increase all font sizes */
+
+.brand {
+  font-size: 20px;
+}
+
+.ver {
+  font-size: 11px;
+}
+
+.nav a {
+  font-size: 14px;
+}
+
+.user {
+  font-size: 14px;
+}
+
+.pro {
+  font-size: 12px;
+}
+
+.avatar {
+  font-size: 13px;
+}
+
+.hero h2 {
+  font-size: 27px;
+}
+
+.hero p {
+  font-size: 14px;
+}
+
+.stats b {
+  font-size: 21px;
+}
+
+.stats small {
+  font-size: 10px;
+}
+
+.section-head h3 {
+  font-size: 19px;
+}
+
+.count {
+  font-size: 11px;
+}
+
+.filters button {
+  font-size: 12px;
+}
+
+.badge {
+  font-size: 11px;
+}
+
+.status {
+  font-size: 11px;
+}
+
+.card h4 {
+  font-size: 17px;
+}
+
+.note {
+  font-size: 13px;
+}
+
+.unit strong {
+  font-size: 24px;
+}
+
+.unit small {
+  font-size: 9px;
+}
+
+.finished {
+  font-size: 14px;
+}
+
+.card-foot {
+  font-size: 11px;
+}
+
+.new-card b {
+  font-size: 15px;
+}
+
+.new-card span {
+  font-size: 12px;
+}
+
+.empty,
+.error {
+  font-size: 14px;
+}
+
+.panel h3 {
+  font-size: 17px;
+}
+
+.panel .sub {
+  font-size: 13px;
+}
+
+.preview .placeholder {
+  font-size: 13px;
+}
+
+.field > span {
+  font-size: 12px;
+}
+
+.field input,
+.field textarea {
+  font-size: 14px;
+}
+
+.seg button {
+  font-size: 13px;
+}
+
+.btn {
+  font-size: 14px;
+}
+
+.tip {
+  font-size: 12px;
+}
+
+.footer .wrap {
+  font-size: 12px;
 }
