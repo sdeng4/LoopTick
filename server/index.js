@@ -1,21 +1,30 @@
 import express from 'express'
-import { DatabaseSync } from 'node:sqlite'
+import pg from 'pg'
+import dotenv from 'dotenv'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const db = new DatabaseSync(path.join(__dirname, 'looptick.db'))
+dotenv.config({ path: path.join(__dirname, '.env') })
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS countdowns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    note TEXT NOT NULL DEFAULT '',
-    target TEXT NOT NULL,            -- local time, "YYYY-MM-DDTHH:mm"
-    repeat TEXT NOT NULL DEFAULT 'none' CHECK (repeat IN ('none','daily','monthly','yearly')),
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )
-`)
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is missing from server/.env')
+}
+
+const db = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: true,
+    ca: readFileSync(path.join(__dirname, 'supabase-ca.crt'), 'utf8'),
+  },
+  max: 5,
+  connectionTimeoutMillis: 10000,
+})
+
+db.on('error', (err) => {
+  console.error('Database pool error:', err.message)
+})
 
 const app = express()
 app.use(express.json())
@@ -23,53 +32,137 @@ app.use(express.json())
 const REPEATS = ['none', 'daily', 'monthly', 'yearly']
 const TARGET_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
 
-function parse(body) {
+function parse(body = {}) {
   const title = String(body.title ?? '').trim()
   const note = String(body.note ?? '').trim()
   const target = String(body.target ?? '')
   const repeat = String(body.repeat ?? 'none')
+
   if (!title) return { error: 'title is required' }
-  if (!TARGET_RE.test(target)) return { error: 'target must be YYYY-MM-DDTHH:mm' }
-  if (!REPEATS.includes(repeat)) return { error: 'invalid repeat' }
+  if (!TARGET_RE.test(target)) {
+    return { error: 'target must be YYYY-MM-DDTHH:mm' }
+  }
+  if (!REPEATS.includes(repeat)) {
+    return { error: 'invalid repeat' }
+  }
+
   return { value: { title, note, target, repeat } }
 }
 
-app.get('/api/countdowns', (_req, res) => {
-  res.json(db.prepare('SELECT * FROM countdowns ORDER BY id DESC').all())
+const route = (handler) => (req, res, next) => {
+  Promise.resolve(handler(req, res, next)).catch(next)
+}
+
+app.param('id', (req, res, next, id) => {
+  if (!/^[1-9]\d*$/.test(id) ||
+      !Number.isSafeInteger(Number(id))) {
+    return res.status(400).json({ error: 'invalid id' })
+  }
+  next()
 })
 
-app.post('/api/countdowns', (req, res) => {
+app.get('/api/countdowns', route(async (_req, res) => {
+  const { rows } = await db.query(
+    'SELECT * FROM public.countdowns ORDER BY id DESC'
+  )
+  res.json(rows)
+}))
+
+app.post('/api/countdowns', route(async (req, res) => {
   const { error, value } = parse(req.body)
   if (error) return res.status(400).json({ error })
-  const info = db
-    .prepare('INSERT INTO countdowns (title, note, target, repeat) VALUES (?, ?, ?, ?)')
-    .run(value.title, value.note, value.target, value.repeat)
-  res.status(201).json(db.prepare('SELECT * FROM countdowns WHERE id = ?').get(info.lastInsertRowid))
-})
 
-app.put('/api/countdowns/:id', (req, res) => {
+  const { rows } = await db.query(
+    `INSERT INTO public.countdowns (title, note, target, repeat)
+     VALUES ($1, $2, $3, $4) RETURNING *`,
+    [value.title, value.note, value.target, value.repeat]
+  )
+  res.status(201).json(rows[0])
+}))
+
+app.put('/api/countdowns/:id', route(async (req, res) => {
   const { error, value } = parse(req.body)
   if (error) return res.status(400).json({ error })
-  const info = db
-    .prepare('UPDATE countdowns SET title = ?, note = ?, target = ?, repeat = ? WHERE id = ?')
-    .run(value.title, value.note, value.target, value.repeat, req.params.id)
-  if (!info.changes) return res.status(404).json({ error: 'not found' })
-  res.json(db.prepare('SELECT * FROM countdowns WHERE id = ?').get(req.params.id))
-})
 
-app.delete('/api/countdowns/:id', (req, res) => {
-  const info = db.prepare('DELETE FROM countdowns WHERE id = ?').run(req.params.id)
-  if (!info.changes) return res.status(404).json({ error: 'not found' })
+  const { rows } = await db.query(
+    `UPDATE public.countdowns
+     SET title = $1, note = $2, target = $3, repeat = $4
+     WHERE id = $5 RETURNING *`,
+    [
+      value.title, value.note, value.target,
+      value.repeat, req.params.id,
+    ]
+  )
+
+  if (!rows.length) {
+    return res.status(404).json({ error: 'not found' })
+  }
+  res.json(rows[0])
+}))
+
+app.delete('/api/countdowns/:id', route(async (req, res) => {
+  const { rowCount } = await db.query(
+    'DELETE FROM public.countdowns WHERE id = $1',
+    [req.params.id]
+  )
+
+  if (!rowCount) {
+    return res.status(404).json({ error: 'not found' })
+  }
   res.status(204).end()
+}))
+
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API route not found' })
 })
 
-// Serve the built frontend when running `npm start`
 const dist = path.join(__dirname, '..', 'dist')
 app.use(express.static(dist))
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next()
-  res.sendFile(path.join(dist, 'index.html'), (err) => err && next())
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next()
+  res.sendFile(path.join(dist, 'index.html'), (err) => {
+    if (err) next(err)
+  })
 })
 
-const port = process.env.API_PORT || 3001
-app.listen(port, () => console.log(`LoopTick API on http://localhost:${port}`))
+app.use((err, _req, res, _next) => {
+  console.error('Request failed:', err.message)
+  const status = err.status === 400 ? 400 : 500
+  res.status(status).json({
+    error: status === 400 ? 'Invalid request' : 'Server error',
+  })
+})
+
+async function start() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS public.countdowns (
+      id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+      title TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      target TEXT NOT NULL,
+      repeat TEXT NOT NULL DEFAULT 'none'
+        CHECK (repeat IN ('none','daily','monthly','yearly')),
+      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP::text)
+    )
+  `)
+
+  await db.query(
+    'ALTER TABLE public.countdowns ENABLE ROW LEVEL SECURITY'
+  )
+  await db.query(
+    'REVOKE ALL ON TABLE public.countdowns FROM anon, authenticated'
+  )
+
+  const port = process.env.API_PORT || 3001
+  app.listen(port, () => {
+    console.log(`LoopTick API on http://localhost:${port}`)
+    console.log('Connected to Supabase PostgreSQL')
+  })
+}
+
+start().catch(async (err) => {
+  console.error('Startup failed:', err.message)
+  await db.end()
+  process.exitCode = 1
+})
