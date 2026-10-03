@@ -161,8 +161,12 @@ async function start() {
   })
 }
 
-start().catch(async (err) => {
-  console.error('Startup failed:', err.message)
-  await db.end()
-  process.exitCode = 1
-})
+if (!process.env.VERCEL) {
+  start().catch(async (err) => {
+    console.error('Startup failed:', err.message)
+    await db.end()
+    process.exitCode = 1
+  })
+}
+
+export default app
