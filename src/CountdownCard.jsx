@@ -22,7 +22,7 @@ export default function CountdownCard({ item, now, onEdit, onDelete }) {
       <p className="note">{item.note}</p>
 
       {finished ? (
-        <div className="finished">已结束</div>
+        <div className="finished">Finished</div>
       ) : (
         <div className="time">
           <Unit value={pad(days)} label="DAYS" />

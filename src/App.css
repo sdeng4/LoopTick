@@ -246,3 +246,18 @@
 .footer .wrap {
   font-size: 12px;
 }
+/* auth */
+.btn-ghost { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text); }
+.btn-ghost:hover { background: var(--soft); }
+.btn-ghost.dark { color: #fff; border-color: #3f3f46; }
+.btn-ghost.dark:hover { background: #18181b; }
+.pro.light { background: #fff; color: #0f1115; }
+.hero .user { flex-wrap: wrap; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 17, 21, 0.45); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.panel.modal { position: relative; top: 0; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); }
+.modal-close { position: absolute; top: 14px; right: 14px; }
+.auth-tabs { margin: 8px 0 20px; width: calc(100% - 34px); }
+
+.notice { color: #047857; background: #ecfdf5; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 14px; }
+.banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
