@@ -109,7 +109,7 @@ export default function Landing({ now, banner, onLogin, onSignup }) {
       <header className="topbar lp-top">
         <div className="wrap">
           <div className="brand">
-            <span className="logo">⟳</span>
+            <img className="logo-img" src="/logo.png" alt="" />
             LoopTick
           </div>
           <nav className="nav">

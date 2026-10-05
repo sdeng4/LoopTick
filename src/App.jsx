@@ -171,7 +171,7 @@ export default function App() {
       <header className="topbar">
         <div className="wrap">
           <div className="brand">
-            <span className="logo">⟳</span>
+            <img className="logo-img" src="/logo.png" alt="" />
             LoopTick
           </div>
           {user && (

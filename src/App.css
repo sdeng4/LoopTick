@@ -5,6 +5,7 @@
 .topbar { background: #fff; border-bottom: 1px solid var(--border); }
 .topbar .wrap { height: 60px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.logo-img { width: 26px; height: 26px; display: block; }
 .logo { width: 24px; height: 24px; border-radius: 6px; background: #0f1115; color: #fff; display: grid; place-items: center; }
 .ver { font: 500 10px var(--mono); color: var(--accent); background: var(--accent-soft); border: 1px solid #d9ddff; padding: 1px 5px; border-radius: 4px; }
 .nav { display: flex; gap: 4px; }
