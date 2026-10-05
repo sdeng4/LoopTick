@@ -10,6 +10,7 @@ import {
 import AuthModal from './AuthModal.jsx'
 import CountdownForm from './CountdownForm.jsx'
 import CountdownCard from './CountdownCard.jsx'
+import Landing, { SiteFooter } from './Landing.jsx'
 import { nextOccurrence } from './time.js'
 import './App.css'
 
@@ -121,6 +122,43 @@ export default function App() {
     document.querySelector('#config input')?.focus()
   }
 
+  const bannerEl = banner && (
+    <div className="wrap">
+      <div className={banner.ok ? 'notice banner' : 'error banner'}>
+        <span>{banner.text}</span>
+        <button className="icon-btn" onClick={() => setBanner(null)} title="dismiss">✕</button>
+      </div>
+    </div>
+  )
+
+  const authModal = authMode && (
+    <AuthModal
+      initialMode={authMode}
+      onClose={() => setAuthMode(null)}
+      onLoggedIn={(u) => {
+        setAuthMode(null)
+        setBanner(null)
+        setUser(u)
+        window.scrollTo(0, 0)
+      }}
+    />
+  )
+
+  // Logged-out visitors land on the marketing home page
+  if (user === null) {
+    return (
+      <>
+        <Landing
+          now={now}
+          banner={bannerEl}
+          onLogin={() => setAuthMode('login')}
+          onSignup={() => setAuthMode('signup')}
+        />
+        {authModal}
+      </>
+    )
+  }
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -129,59 +167,20 @@ export default function App() {
             <span className="logo">⟳</span>
             LoopTick
           </div>
-          {user ? (
+          {user && (
             <div className="user">
               <span className="avatar">{user.username[0].toUpperCase()}</span>
               <span>{user.username}</span>
               <button className="btn-ghost" onClick={handleLogout}>Log out</button>
             </div>
-          ) : user === null && (
-            <div className="user">
-              <button className="btn-ghost" onClick={() => setAuthMode('login')}>Log in</button>
-              <button className="pro" onClick={() => setAuthMode('signup')}>Sign up</button>
-            </div>
           )}
         </div>
       </header>
 
-      {authMode && (
-        <AuthModal
-          initialMode={authMode}
-          onClose={() => setAuthMode(null)}
-          onLoggedIn={(u) => {
-            setAuthMode(null)
-            setBanner(null)
-            setUser(u)
-          }}
-        />
-      )}
-
       <main className="main">
-        {banner && (
-          <div className="wrap">
-            <div className={banner.ok ? 'notice banner' : 'error banner'}>
-              <span>{banner.text}</span>
-              <button className="icon-btn" onClick={() => setBanner(null)} title="dismiss">✕</button>
-            </div>
-          </div>
-        )}
+        {bannerEl}
 
         {user === undefined && <div className="wrap"><p className="empty">Loading…</p></div>}
-
-        {user === null && (
-          <div className="wrap">
-            <section className="hero">
-              <div>
-                <h2>Smart repeating countdowns</h2>
-                <p>Create custom countdowns with daily, monthly, or yearly recurrence. Get an email the moment each one reaches its time.</p>
-              </div>
-              <div className="user">
-                <button className="btn-ghost dark" onClick={() => setAuthMode('login')}>Log in</button>
-                <button className="pro light" onClick={() => setAuthMode('signup')}>Create a free account</button>
-              </div>
-            </section>
-          </div>
-        )}
 
         {user && <div className="wrap layout">
           <div>
@@ -239,13 +238,7 @@ export default function App() {
         </div>}
       </main>
 
-      <footer className="footer">
-        <div className="wrap">
-          <span>© 2026 LoopTick</span>
-          <span className="links"><span>Terms</span><span>Privacy</span></span>
-          <span>Clean Utility System · <span className="mono">Built with React</span></span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }
