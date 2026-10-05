@@ -48,6 +48,13 @@ export default function App() {
     getMe().then(setUser, () => setUser(null))
   }, [])
 
+  // Home page anchors (#how, #faq…) mean nothing on the dashboard; drop them
+  useEffect(() => {
+    if (user && window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+  }, [user])
+
   const signedOut = useCallback(() => {
     setUser(null)
     setItems([])
