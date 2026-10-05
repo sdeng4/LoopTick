@@ -1,9 +1,7 @@
-import { breakdown, nextOccurrence, pad } from './time.js'
-
-export const REPEAT_LABEL = { none: 'One-time', daily: 'Daily', monthly: 'Monthly', yearly: 'Yearly' }
+import { breakdown, nextOccurrence, pad, repeatLabel } from './time.js'
 
 export default function CountdownCard({ item, now, onEdit, onDelete }) {
-  const next = nextOccurrence(item.target, item.repeat, now)
+  const next = nextOccurrence(item.target, item.repeat, now, item.repeat_every)
   const finished = next === null
   const { days, hours, minutes, seconds } = breakdown(finished ? 0 : next - now)
   const stamp = (next ?? new Date(item.target)).toLocaleString('sv-SE').slice(0, 16)
@@ -13,7 +11,7 @@ export default function CountdownCard({ item, now, onEdit, onDelete }) {
       <div className="card-top">
         <span className={`badge ${item.repeat}`}>
           {item.repeat !== 'none' && '⟳ '}
-          {REPEAT_LABEL[item.repeat]}
+          {repeatLabel(item.repeat, item.repeat_every)}
         </span>
         <span className="status">{finished ? 'Completed' : 'Active'}</span>
       </div>

@@ -34,9 +34,10 @@ const app = express()
 app.set('trust proxy', 1)
 app.use(express.json())
 
-const REPEATS = ['none', 'daily', 'monthly', 'yearly']
+const REPEATS = ['none', 'daily', 'weekly', 'monthly', 'yearly']
+const MAX_EVERY = 999
 const TARGET_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
-const COUNTDOWN_COLUMNS = 'id, title, note, target, repeat, timezone, created_at'
+const COUNTDOWN_COLUMNS = 'id, title, note, target, repeat, repeat_every, timezone, created_at'
 
 function parse(body = {}) {
   const title = String(body.title ?? '').trim()
@@ -44,6 +45,7 @@ function parse(body = {}) {
   const target = String(body.target ?? '')
   const repeat = String(body.repeat ?? 'none')
   const timezone = String(body.timezone ?? 'UTC')
+  const every = repeat === 'none' ? 1 : Number(body.repeat_every ?? 1)
 
   if (!title) return { error: 'title is required' }
   if (!TARGET_RE.test(target)) {
@@ -52,12 +54,15 @@ function parse(body = {}) {
   if (!REPEATS.includes(repeat)) {
     return { error: 'invalid repeat' }
   }
+  if (!Number.isInteger(every) || every < 1 || every > MAX_EVERY) {
+    return { error: `repeat interval must be a whole number from 1 to ${MAX_EVERY}` }
+  }
   if (!isValidTimezone(timezone)) {
     return { error: 'invalid timezone' }
   }
 
-  const notifyAt = nextFireAt(target, repeat, timezone)
-  return { value: { title, note, target, repeat, timezone, notifyAt } }
+  const notifyAt = nextFireAt(target, repeat, timezone, new Date(), every)
+  return { value: { title, note, target, repeat, every, timezone, notifyAt } }
 }
 
 const route = (handler) => (req, res, next) => {
@@ -105,12 +110,12 @@ app.post('/api/countdowns', route(async (req, res) => {
 
   const { rows } = await db.query(
     `INSERT INTO public.countdowns
-       (user_id, title, note, target, repeat, timezone, notify_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (user_id, title, note, target, repeat, repeat_every, timezone, notify_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING ${COUNTDOWN_COLUMNS}`,
     [
       req.user.id, value.title, value.note, value.target,
-      value.repeat, value.timezone, value.notifyAt,
+      value.repeat, value.every, value.timezone, value.notifyAt,
     ]
   )
   res.status(201).json(rows[0])
@@ -123,11 +128,11 @@ app.put('/api/countdowns/:id', route(async (req, res) => {
   const { rows } = await db.query(
     `UPDATE public.countdowns
      SET title = $1, note = $2, target = $3, repeat = $4,
-         timezone = $5, notify_at = $6
-     WHERE id = $7 AND user_id = $8
+         repeat_every = $5, timezone = $6, notify_at = $7
+     WHERE id = $8 AND user_id = $9
      RETURNING ${COUNTDOWN_COLUMNS}`,
     [
-      value.title, value.note, value.target, value.repeat,
+      value.title, value.note, value.target, value.repeat, value.every,
       value.timezone, value.notifyAt, req.params.id, req.user.id,
     ]
   )
@@ -204,7 +209,16 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS user_id INTEGER
         REFERENCES public.users(id) ON DELETE CASCADE,
       ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'UTC',
-      ADD COLUMN IF NOT EXISTS notify_at TIMESTAMPTZ
+      ADD COLUMN IF NOT EXISTS notify_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS repeat_every INTEGER NOT NULL DEFAULT 1
+        CHECK (repeat_every BETWEEN 1 AND ${MAX_EVERY})
+  `)
+  // Widen the original repeat CHECK to allow weekly intervals
+  await db.query(`
+    ALTER TABLE public.countdowns
+      DROP CONSTRAINT IF EXISTS countdowns_repeat_check,
+      ADD CONSTRAINT countdowns_repeat_check
+        CHECK (repeat IN ('none','daily','weekly','monthly','yearly'))
   `)
   await db.query(`
     CREATE INDEX IF NOT EXISTS countdowns_user_id_idx

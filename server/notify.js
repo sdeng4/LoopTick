@@ -21,7 +21,7 @@ export async function sendDueNotifications(db, appUrl) {
     const after = new Date(c.notify_at.getTime() + 60_000)
     const next = c.repeat === 'none'
       ? null
-      : nextFireAt(c.target, c.repeat, c.timezone, after > new Date() ? after : new Date())
+      : nextFireAt(c.target, c.repeat, c.timezone, after > new Date() ? after : new Date(), c.repeat_every)
 
     // Claim the row first: if another run already advanced it, skip.
     // This keeps overlapping runs from sending the same email twice.

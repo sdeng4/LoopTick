@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
-import CountdownCard, { REPEAT_LABEL, Unit } from './CountdownCard.jsx'
+import CountdownCard, { Unit } from './CountdownCard.jsx'
 import CountdownForm from './CountdownForm.jsx'
-import { breakdown, nextOccurrence, pad } from './time.js'
+import { breakdown, nextOccurrence, pad, repeatLabel } from './time.js'
 import './Landing.css'
 
 const FEATURES = [
   {
     icon: '⟳',
     title: 'Repeating loops',
-    text: 'Choose one-time, daily, monthly, or yearly. Repeating countdowns restart on their own the moment they finish.',
+    text: 'Choose one-time, daily, monthly, yearly, or a custom interval like every 2 months. Repeating countdowns restart on their own.',
   },
   {
     icon: '✉',
@@ -55,7 +55,7 @@ const STEPS = [
 const FAQS = [
   {
     q: 'Which repeat options are available?',
-    a: 'One-time, daily, monthly, and yearly. One-time countdowns are marked as completed when they end; the others automatically roll over to their next occurrence.',
+    a: 'One-time, daily, monthly, and yearly, plus custom intervals: every N days, weeks, months, or years (for example every 2 months or every 2 years). One-time countdowns are marked as completed when they end; the others automatically roll over to their next occurrence.',
   },
   {
     q: 'How do email reminders work?',
@@ -84,6 +84,7 @@ function useSamples() {
       { id: 's1', title: 'Product launch', note: 'Final checks, publish the release notes, and share the announcement.', target: launch, repeat: 'none' },
       { id: 's2', title: 'Rent payment', note: 'Transfer rent before the due date. Restarts every month.', target: '2026-01-01T09:00', repeat: 'monthly' },
       { id: 's3', title: 'Morning workout', note: 'Thirty minutes before work, every single day.', target: '2026-01-01T07:00', repeat: 'daily' },
+      { id: 's4', title: 'Car service', note: 'Oil change and tire check at the garage.', target: '2026-03-15T09:30', repeat: 'monthly', repeat_every: 2 },
     ]
   }, [])
 }
@@ -94,12 +95,12 @@ function Check({ children }) {
 
 export default function Landing({ now, banner, onLogin, onSignup }) {
   const samples = useSamples()
-  const hero = samples[1]
-  const next = nextOccurrence(hero.target, hero.repeat, now)
+  const hero = samples[3]
+  const next = nextOccurrence(hero.target, hero.repeat, now, hero.repeat_every)
   const { days, hours, minutes, seconds } = breakdown(next - now)
 
   const stats = {
-    active: samples.filter((s) => nextOccurrence(s.target, s.repeat, now)).length,
+    active: samples.filter((s) => nextOccurrence(s.target, s.repeat, now, s.repeat_every)).length,
     loops: samples.filter((s) => s.repeat !== 'none').length,
   }
 
@@ -136,7 +137,7 @@ export default function Landing({ now, banner, onLogin, onSignup }) {
                 Smart repeating countdowns, <em>so every cycle lands on time.</em>
               </h1>
               <p className="lp-lead">
-                Track one-time, daily, monthly, and yearly moments. Each countdown restarts
+                Track one-time, daily, monthly, and yearly moments, or set your own interval. Each countdown restarts
                 itself when it ends and emails you the moment it hits zero.
               </p>
               <div className="lp-actions">
@@ -161,7 +162,7 @@ export default function Landing({ now, banner, onLogin, onSignup }) {
 
               <article className="card lp-show-card">
                 <div className="card-top">
-                  <span className={`badge ${hero.repeat}`}>⟳ {REPEAT_LABEL[hero.repeat]}</span>
+                  <span className={`badge ${hero.repeat}`}>⟳ {repeatLabel(hero.repeat, hero.repeat_every)}</span>
                   <span className="status">Active</span>
                 </div>
                 <h4>{hero.title}</h4>
@@ -179,7 +180,7 @@ export default function Landing({ now, banner, onLogin, onSignup }) {
               </article>
 
               <div className="lp-tiles">
-                <div><b>4</b><small>Repeat modes</small></div>
+                <div><b>N×</b><small>Custom intervals</small></div>
                 <div><b>1s</b><small>Live refresh</small></div>
                 <div><b>✉</b><small>Email at zero</small></div>
               </div>

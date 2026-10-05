@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { repeatPhrase } from './tz.js'
 
 let transport = null
 
@@ -69,7 +70,7 @@ export function sendVerificationEmail(to, username, link) {
 export function sendCountdownEmail(to, username, countdown, appUrl) {
   const repeating = countdown.repeat !== 'none'
   const nextLine = repeating
-    ? `This is a ${countdown.repeat} countdown, so it has restarted for the next occurrence.`
+    ? `This countdown repeats ${repeatPhrase(countdown.repeat, countdown.repeat_every)}, so it has restarted for the next occurrence.`
     : 'This was a one-time countdown and is now complete.'
 
   return sendMail({

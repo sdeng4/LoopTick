@@ -58,32 +58,45 @@ function parseTarget(target) {
   return new Date(Date.UTC(y, mo - 1, day, h, mi))
 }
 
+const DAY_STEP = { daily: 1, weekly: 7 }
+const MONTH_STEP = { monthly: 1, yearly: 12 }
+
 // Next instant at or after `now` when the countdown fires, or null if a
-// one-time countdown has already passed. Mirrors nextOccurrence in src/time.js.
-export function nextFireAt(target, repeat, tz, now = new Date()) {
+// one-time countdown has already passed. Mirrors nextOccurrence in src/time.js:
+// occurrences are target + k * (every × unit).
+export function nextFireAt(target, repeat, tz, now = new Date(), every = 1) {
   const base = parseTarget(target)
   const wallNow = toWall(now, tz)
+  const n = Math.max(1, Number(every) || 1)
   let next = null
 
   if (base >= wallNow) {
     next = base
-  } else if (repeat === 'daily') {
-    next = new Date(Date.UTC(
-      wallNow.getUTCFullYear(), wallNow.getUTCMonth(), wallNow.getUTCDate(),
-      base.getUTCHours(), base.getUTCMinutes()
-    ))
-    if (next < wallNow) next.setUTCDate(next.getUTCDate() + 1)
-  } else if (repeat === 'monthly') {
-    next = withClampedDay(base, wallNow.getUTCFullYear(), wallNow.getUTCMonth())
-    if (next < wallNow) {
-      next = withClampedDay(base, wallNow.getUTCFullYear(), wallNow.getUTCMonth() + 1)
-    }
-  } else if (repeat === 'yearly') {
-    next = withClampedDay(base, wallNow.getUTCFullYear(), base.getUTCMonth())
-    if (next < wallNow) {
-      next = withClampedDay(base, wallNow.getUTCFullYear() + 1, base.getUTCMonth())
-    }
+  } else if (DAY_STEP[repeat]) {
+    const step = DAY_STEP[repeat] * n
+    const dayMs = 86400_000
+    const diff = Math.floor(wallNow / dayMs) - Math.floor(base / dayMs)
+    let k = Math.floor(diff / step)
+    const at = (k) => new Date(base.getTime() + k * step * dayMs)
+    while (at(k) < wallNow) k++
+    next = at(k)
+  } else if (MONTH_STEP[repeat]) {
+    const step = MONTH_STEP[repeat] * n
+    const diff = (wallNow.getUTCFullYear() - base.getUTCFullYear()) * 12 +
+      wallNow.getUTCMonth() - base.getUTCMonth()
+    let k = Math.floor(diff / step)
+    const at = (k) => withClampedDay(base, base.getUTCFullYear(), base.getUTCMonth() + k * step)
+    while (at(k) < wallNow) k++
+    next = at(k)
   }
 
   return next && toInstant(next, tz)
+}
+
+const UNIT = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
+
+// "every day", "every 2 months"… (mirrors repeatLabel in src/time.js)
+export function repeatPhrase(repeat, every = 1) {
+  const n = Number(every) || 1
+  return n === 1 ? `every ${UNIT[repeat]}` : `every ${n} ${UNIT[repeat]}s`
 }

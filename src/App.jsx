@@ -110,7 +110,7 @@ export default function App() {
   }
 
   const stats = useMemo(() => {
-    const active = items.filter((i) => nextOccurrence(i.target, i.repeat, now) !== null).length
+    const active = items.filter((i) => nextOccurrence(i.target, i.repeat, now, i.repeat_every) !== null).length
     const loops = items.filter((i) => i.repeat !== 'none').length
     return { active, loops, done: items.length - active }
   }, [items, now])
@@ -187,7 +187,7 @@ export default function App() {
             <section className="hero">
               <div>
                 <h2>Smart repeating countdowns</h2>
-                <p>Create custom countdowns with daily, monthly, or yearly recurrence. They reset automatically, and we email you when each one ends.</p>
+                <p>Create custom countdowns that repeat daily, monthly, yearly, or on any custom interval. They reset automatically, and we email you when each one ends.</p>
               </div>
               <div className="stats">
                 <div><b>{stats.active}</b><small>Active</small></div>

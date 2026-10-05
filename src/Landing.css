@@ -1,13 +1,14 @@
 html { scroll-behavior: smooth; }
 
 .lp .wrap { max-width: 1240px; }
-.lp-top { position: sticky; top: 0; z-index: 5; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px); }
+/* .lp prefix so this beats .topbar's solid white in App.css */
+.lp .lp-top { position: sticky; top: 0; z-index: 5; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); }
 .lp-top .nav { gap: 8px; }
 .lp-top .nav a:hover { background: var(--soft); }
 .lp-banner .banner { margin: 20px 0 0; }
 
 /* shared bits */
-.lp-pill { display: inline-block; font-size: 12px; font-weight: 500; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 12px; }
+.lp-pill { display: inline-block; font-size: 12px; font-weight: 500; color: var(--accent); background: var(--accent-soft); border: 1px solid #d9ddff; border-radius: 999px; padding: 3px 11px; }
 .lp-btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 12px 18px; font-size: 14px; font-weight: 600; text-decoration: none; }
 .lp-btn.primary { background: var(--accent); color: #fff; border: 0; }
 .lp-btn.primary:hover { background: #434ec0; }
@@ -55,7 +56,6 @@ html { scroll-behavior: smooth; }
 .lp-frame-bar .dots i:nth-child(3) { background: #10b981; }
 .lp-frame-title { font-size: 12px; color: var(--accent); font-weight: 500; }
 .lp-frame-body { padding: 24px; background: var(--bg); }
-.lp-frame-body .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .lp-frame-body .panel { position: static; }
 .lp-frame-body .section-head { margin: 28px 0 18px; }
 
@@ -88,9 +88,6 @@ html { scroll-behavior: smooth; }
 .lp-cta h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
 .lp-cta p { margin: 0; color: #a1a1aa; font-size: 15px; }
 
-@media (max-width: 1100px) {
-  .lp-frame-body .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (max-width: 900px) {
   .lp-hero-grid { grid-template-columns: 1fr; gap: 40px; }
   .lp-hero h1 { font-size: 40px; }
